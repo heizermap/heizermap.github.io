@@ -12,6 +12,7 @@ window.addEventListener("load", function(e) {
   var context = canvas.getContext('2d');
   var webcam = document.getElementById('webcam');
   var swatch = document.getElementById("color");
+  var currentRectangles;
 
   // Register our custom color tracking function
   tracking.ColorTracker.registerColor('dynamic', function(r, g, b) {
@@ -28,6 +29,9 @@ window.addEventListener("load", function(e) {
 
     if (e.data.length !== 0) {
 
+      //store our tracked rectangles to the variable currentRectangles
+      currentRectangles = e;
+
       e.data.forEach(function(rect) {
         // console.log(rect);
         drawRect(rect, context, color);
@@ -43,16 +47,66 @@ window.addEventListener("load", function(e) {
   // Add listener for the click event on the video
   webcam.addEventListener("click", function (e) {
 
-    // Grab color from the video feed where the click occured
-    var c = getColorAt(webcam, e.offsetX, e.offsetY);
+    // Option 1: Get the color where we clicked
+    /* var c = getColorAt(webcam, e.offsetX, e.offsetY);
+
+    // Check if the color where we clicked matches the color we set using the input
+    if (getColorDistance(color, c) < slider.value)
+    {
+
+      // turn on the winning block
+      document.getElementById('youwon').style.display = 'block';
+
+    }*/
+
+    // Option 2: Check our currentRectangles
+
+    // check our click against each rectangle active on the screen
+
+    for (i = 0; i < currentRectangles.data.length; i++) {
+
+      // check if the X of our click is more than the X coordinate of where the rectangle starts
+      if(e.offsetX >= currentRectangles.data[i].x)
+      {
+        // then check if the X of our click is less than the X coordinate of where the rectangle ends
+        if(e.offsetX <= (currentRectangles.data[i].x + currentRectangles.data[i].width))
+        {
+          // then check if the Y of our click is more than the Y coordinate of where the rectangle starts
+          if(e.offsetY >= currentRectangles.data[i].y)
+          {
+            // then check if the Y of our click is less than the Y coordinate of where the rectangle ends
+            if(e.offsetY <= (currentRectangles.data[i].y + currentRectangles.data[i].height))
+            {
+              // turn on the winning block and turn off the game window so it doesn't flicker
+              document.getElementById('youwon').style.display = 'block';
+              document.getElementsByClassName('gamewindow')[0].style.display = 'none';
+
+              // we found a winner so break out of our loop by returning as true!
+              break;
+            }
+          }
+        }
+      }
+    }
+
+
+  });
+
+  // Add listener for when the swatch color changes
+  swatch.addEventListener("input", function() {
+
+    // #XXXXXX -> ["XX", "XX", "XX"]
+    // convert the hexadecimal color to RGB using the match function
+    var thenewcolor = swatch.value.match(/[A-Za-z0-9]{2}/g);
+
+    // ["XX", "XX", "XX"] -> [n, n, n]
+    // convert the text array to an array of numbers using the map and parseInt functions
+    thenewcolor = thenewcolor.map(function(v) { return parseInt(v, 16) });
 
     // Update target color
-    color.r = c.r;
-    color.g = c.g;
-    color.b = c.b;
-
-    // Update the div's background so we can see which color was selected
-    swatch.style.backgroundColor = "rgb(" + c.r + ", " + c.g + ", " + c.b + ")";
+    color.r = thenewcolor[0];
+    color.g = thenewcolor[1];
+    color.b = thenewcolor[2];
 
   });
 
@@ -87,5 +141,6 @@ function getColorAt(webcam, x, y) {
 // Draw a colored rectangle on the canvas
 function drawRect(rect, context, color) {
   context.strokeStyle = "rgb(" + color.r + ", " + color.g + ", " + color.b + ")";
+  context.lineWidth = 10;
   context.strokeRect(rect.x, rect.y, rect.width, rect.height);
 }
