@@ -76,8 +76,8 @@ canvas {
   top: 0;
   left: 0;
   padding: 25%;
-  width: 100%;
+  width: 50%;
   height: 100%;
-  background-color: yellow;
-  color: blue;
+  background-color: purple;
+  color: red;
 }
